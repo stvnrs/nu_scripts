@@ -27,12 +27,15 @@ def "nu-complete winget source type" [] {
 
 def "nu-complete winget flagify" [name: string, value: any, --short(-s)] {
   let flag_start = if $short { '-' } else { '--' }
+
   if $value == null or $value == false {
-    ""
+    []
   } else if $value == true {
-    $"($flag_start)($name)"
+    [$"($flag_start)($name)"]
+  } else if (($value | describe) =~ 'list') {
+    [$"($flag_start)($name)" ...($value)]
   } else {
-    $"($flag_start)($name) ($value)"
+    [$"($flag_start)($name)" $value]
   }
 }
 
@@ -182,35 +185,34 @@ def "winget show" [
     --help(-?), # Display the help for this command
 ] {
     let flagify = { |name, value| nu-complete winget flagify $name $value }
-
-    let command = ([
-        "winget show"
-        $pos_query,
-        (do $flagify query $query)
-        (do $flagify id $id)
-        (do $flagify name $name)
-        (do $flagify moniker $moniker)
-        (do $flagify version $version)
-        (do $flagify source $source)
-        #(do $flagify scope $scope)
-        (do $flagify exact $exact)
-        (do $flagify interactive $interactive)
-        (do $flagify silent $silent)
-        (do $flagify locale $locale)
-        (do $flagify log $log)
-        (do $flagify override $override)
-        (do $flagify location $location)
-        (do $flagify force $force)
-        (do $flagify accept_package_agreements $accept_package_agreements)
-        (do $flagify header $header)
-        (do $flagify accept_source_agreements $accept_source_agreements)
-        (do $flagify help $help)
-    ] | str join ' ')
+    let args = [
+        show
+        $pos_query
+        ...(do $flagify query $query)
+        ...(do $flagify id $id)
+        ...(do $flagify name $name)
+        ...(do $flagify moniker $moniker)
+        ...(do $flagify version $version)
+        ...(do $flagify source $source)
+        #...(do $flagify scope $scope)
+        ...(do $flagify exact $exact)
+        ...(do $flagify interactive $interactive)
+        ...(do $flagify silent $silent)
+        ...(do $flagify locale $locale)
+        ...(do $flagify log $log)
+        ...(do $flagify override $override)
+        ...(do $flagify location $location)
+        ...(do $flagify force $force)
+        ...(do $flagify accept_package_agreements $accept_package_agreements)
+        ...(do $flagify header $header)
+        ...(do $flagify accept_source_agreements $accept_source_agreements)
+        ...(do $flagify help $help)
+    ] | filter {|it| $it != '' and $it != null} 
 
     if $raw or $help {
-        ^$command
+        ^winget ...$args
     } else {
-        let output = (^$command | lines)
+        let output = (^winget ...$args) | lines
         if ($output | first) =~ "Multiple packages found matching input criteria." {
             $"(ansi yellow)($output | first | str trim)(ansi reset)"
             nu-complete winget parse table ($output | skip 1) | select name id source
@@ -247,18 +249,18 @@ def "winget source list" [
     --help(-?) # Display the help for this command
 ] {
     let flagify = { |name, value| nu-complete winget flagify $name $value }
-
-    let command = ([
-        "winget source list"
+    let args = [
+        source
+        list
         $pos_name
-        (do $flagify name $name)
-        (do $flagify help $help)
-    ] | str join ' ')
+        ...(do $flagify name $name)
+        ...(do $flagify help $help)
+    ] | filter {|it| $it != '' and $it != null} 
 
     if $raw or $help {
-        ^$command
+        ^winget ...$args
     } else {
-        let output = (^$command | lines)
+        let output = (^winget ...$args) | lines
         if ($output | length) == 1 {
             $"(ansi light_red)($output | first)(ansi reset)"
         } else {
@@ -310,28 +312,30 @@ def "winget search" [
     --help(-?) # Display the help for this command
 ] {
     let flagify = { |name, value| nu-complete winget flagify $name $value }
-
-    let command = ([
-        "winget search"
+    let args = [
+        search
         $pos_query
-        (do $flagify query $query)
-        (do $flagify id $id)
-        (do $flagify name $name)
-        (do $flagify moniker $moniker)
-        (do $flagify tag $tag)
-        (do $flagify command $command)
-        (do $flagify source $source)
-        (do $flagify count $count)
-        (do $flagify exact $exact)
-        (do $flagify header $header)
-        (do $flagify accept_source_agreements $accept_source_agreements)
-        (do $flagify help $help)
-    ] | str join ' ')
+        ...(do $flagify query $query)
+        ...(do $flagify id $id)
+        ...(do $flagify name $name)
+        ...(do $flagify moniker $moniker)
+        ...(do $flagify tag $tag)
+        ...(do $flagify command $command)
+        ...(do $flagify source $source)
+        ...(do $flagify count $count)
+        ...(do $flagify exact $exact)
+        ...(do $flagify header $header)
+        ...(do $flagify accept_source_agreements $accept_source_agreements)
+        ...(do $flagify help $help)
+    ] | filter {|it| $it != '' and $it != null} 
+
+    # echo $args
 
     if $raw or $help {
-        ^$command
+        ^winget ...$args
     } else {
-        let output = (^$command | lines)
+        let output = (^winget ...$args) | lines
+
         if ($output | length) == 1 {
             $"(ansi light_red)($output | first)(ansi reset)"
         } else {
@@ -358,28 +362,30 @@ def "winget list" [
     --help(-?) # Display the help for this command
 ] {
     let flagify = { |name, value| nu-complete winget flagify $name $value }
-
-    let command = ([
-        "winget list"
-        $pos_query,
-        (do $flagify query $query)
-        (do $flagify id $id)
-        (do $flagify name $name)
-        (do $flagify moniker $moniker)
-        (do $flagify tag $tag)
-        (do $flagify command $command)
-        (do $flagify source $source)
-        (do $flagify count $count)
-        (do $flagify exact $exact)
-        (do $flagify header $header)
-        (do $flagify accept_source_agreements $accept_source_agreements)
-        (do $flagify help $help)
-    ] | str join ' ')
+    let args = [
+        list
+        $pos_query
+        ...(do $flagify query $query)
+        ...(do $flagify id $id)
+        ...(do $flagify name $name)
+        ...(do $flagify moniker $moniker)
+        ...(do $flagify tag $tag)
+        ...(do $flagify command $command)
+        ...(do $flagify source $source)
+        ...(do $flagify count $count)
+        ...(do $flagify exact $exact)
+        ...(do $flagify header $header)
+        ...(do $flagify accept_source_agreements $accept_source_agreements)
+        ...(do $flagify help $help)
+    ] |  filter {|it| $it != '' and $it != null}  
 
     if $help or $raw {
-        ^$command
+        ^winget ...$args 
     } else {
-        let output = (^$command | lines)
+        # echo ($command | str join ' ')
+        # echo ($command )
+        let output = (^winget ...$args) | lines
+        # $output
         if ($output | length) == 1 {
             $"(ansi light_red)($output | first)(ansi reset)"
         } else {
