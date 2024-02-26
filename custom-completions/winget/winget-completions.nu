@@ -207,7 +207,7 @@ def "winget show" [
         ...(do $flagify header $header)
         ...(do $flagify accept_source_agreements $accept_source_agreements)
         ...(do $flagify help $help)
-    ] | filter {|it| $it != '' and $it != null} 
+    ] | compact --empty 
 
     if $raw or $help {
         ^winget ...$args
@@ -255,7 +255,7 @@ def "winget source list" [
         $pos_name
         ...(do $flagify name $name)
         ...(do $flagify help $help)
-    ] | filter {|it| $it != '' and $it != null} 
+    ] | compact --empty 
 
     if $raw or $help {
         ^winget ...$args
@@ -327,7 +327,7 @@ def "winget search" [
         ...(do $flagify header $header)
         ...(do $flagify accept_source_agreements $accept_source_agreements)
         ...(do $flagify help $help)
-    ] | filter {|it| $it != '' and $it != null} 
+    ] | compact --empty 
 
     # echo $args
 
